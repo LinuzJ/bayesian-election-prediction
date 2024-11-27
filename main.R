@@ -76,10 +76,45 @@ linearModelData <- totalData %>%
   select(variables) %>%
   group_by(year, state_id)
 
+
+# --------- Formula --------- 
+linearFormula <- bf(vote_fraction ~ gdpGrowth + avrg_age + ftotinc + educ_attain_2.0_freq + race_1_freq)
+
+# --------- Priors --------- 
+priors <- c(
+    prior(normal(0, 50), class = "b"),  # Weakly informative priors for coefficients
+    prior(normal(0.5, 0.3), class = "Intercept"),  # Weakly informative prior for the intercept
+    prior(cauchy(0, 0.1), class = "sigma")
+  )
+
 state_model <- lm(
-  vote_fraction ~ gdpGrowth + avrg_age + ftotinc + educ_attain_2.0_freq + race_1_freq,
+  linearFormula,
   data = linearModelData
 )
 
-# View the model summary
 summary(state_model)
+
+
+mcmc_state_model <- brm(
+  linearFormula,
+  data = linearModelData,
+  family = gaussian(),  # Linear model assumes Gaussian errors
+  prior = priors,
+  chains = 5,  # Number of MCMC chains
+  iter = 6000,  # Number of iterations per chain
+  warmup = 2000,  # Burn-in period
+  cores = 10  # Number of cores for parallel computation
+)
+
+summary(mcmc_state_model)
+plot(mcmc_state_model)
+
+# Posterior predictive checks
+pp_check(mcmc_state_model)
+
+
+# _______________________________________ 
+# |                                     | 
+# |     Model 2 - Hierarchical          | 
+# |                                     | 
+# _______________________________________ 

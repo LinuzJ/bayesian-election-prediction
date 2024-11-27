@@ -103,7 +103,7 @@ processGdpData <- function(raw_data) {
     arrange(state_id, year) %>%
     group_by(state_id) %>%
     # growth = (now - previous) / previous
-    mutate(gdpGrowth = (gdp - lag(gdp, 2)) / lag(gdp, 2)) %>%
+    mutate(gdpGrowth = (gdp - lag(gdp, 2)) / lag(gdp, 2) * 100) %>%
     filter(!is.na(gdpGrowth)) %>%
     select(state_id, year, gdpGrowth)
 
