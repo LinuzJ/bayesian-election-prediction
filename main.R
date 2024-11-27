@@ -78,6 +78,7 @@ otherParties <- otherParties %>%
 # Append to total votingData
 votingData <- bind_rows(votingData, otherParties)
 
+
 # _______________________________________ 
 # |                                     | 
 # |       Model Building                | 
