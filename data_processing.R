@@ -95,6 +95,17 @@ processGdpData <- function(raw_data) {
     group_by(state_id) %>%
     summarize(across(everything(), sum, na.rm = TRUE), .groups = "drop")
   
+  # ------ TRANSFORM TO RUNNING TWO YEAR GROWTH -------
+  gdpData <- gdpData %>%
+    # Pivot two three columns, with state_id, year, gdp
+    pivot_longer(-state_id, names_to = "year", values_to = "gdp") %>%
+    # Sort by state_id, year in order to calclate running values
+    arrange(state_id, year) %>%
+    group_by(state_id) %>%
+    # growth = (now - previous) / previous
+    mutate(gdpGrowth = (gdp - lag(gdp, 2)) / lag(gdp, 2)) %>%
+    filter(!is.na(gdpGrowth)) %>%
+    select(state_id, year, gdpGrowth)
 
   return (gdpData)
 }
