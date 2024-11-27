@@ -49,11 +49,37 @@ votingData <- votingData %>%
 censusDataStateLevel <- censusDataStateLevel %>%
   mutate(state_id = as.integer(state_id))
 
+gdpData <- gdpData %>%
+  mutate(state_id = as.integer(state_id))
+
 totalData <- votingData %>%
-  left_join(censusDataStateLevel, by = c("year", "state_id"))
+  left_join(censusDataStateLevel, by = c("year", "state_id")) %>%
+  left_join(gdpData, by = c("year", "state_id"))
 
 # _______________________________________ 
 # |                                     | 
 # |       Model Building                | 
 # |                                     | 
 # _______________________________________ 
+
+# _______________________________________ 
+# |                                     | 
+# |     Model 1 - Linear                | 
+# |                                     | 
+# _______________________________________ 
+
+variables <- c("state_id", "year", "vote_fraction", "gdpGrowth", "avrg_age", "ftotinc", "educ_attain_2.0_freq", "race_1_freq", "totalvotes")
+
+linearModelData <- totalData %>%
+  filter(party_simplified == "REPUBLICAN") %>%
+  mutate(across(variables, as.numeric)) %>%
+  select(variables) %>%
+  group_by(year, state_id)
+
+state_model <- lm(
+  vote_fraction ~ gdpGrowth + avrg_age + ftotinc + educ_attain_2.0_freq + race_1_freq,
+  data = linearModelData
+)
+
+# View the model summary
+summary(state_model)

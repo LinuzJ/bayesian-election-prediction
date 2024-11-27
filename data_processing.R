@@ -107,5 +107,7 @@ processGdpData <- function(raw_data) {
     filter(!is.na(gdpGrowth)) %>%
     select(state_id, year, gdpGrowth)
 
-  return (gdpData)
+  gdpData <- gdpData %>%
+    mutate(year = as.integer(year))
+    return (gdpData)
 }
