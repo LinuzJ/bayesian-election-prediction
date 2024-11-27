@@ -101,7 +101,7 @@ mcmc_state_model <- brm(
   family = gaussian(),
   prior = priors,
   chains = 5,
-  iter = 8000,
+  iter = 15000,
   warmup = 3000,
   cores = 5
 )
@@ -109,7 +109,6 @@ mcmc_state_model <- brm(
 summary(mcmc_state_model)
 plot(mcmc_state_model)
 
-# Posterior predictive checks
 pp_check(mcmc_state_model)
 
 
@@ -118,3 +117,53 @@ pp_check(mcmc_state_model)
 # |     Model 2 - Hierarchical          | 
 # |                                     | 
 # _______________________________________ 
+hierarchicalVariables <- c("state_id", "year", "vote_fraction", "gdpGrowth", "avrg_age", "ftotinc", "educ_attain_2.0_freq", "race_1_freq", "totalvotes")
+#hierarchicalVariables <- c("state_id", "year", "vote_fraction", "inctot", "avrg_age", "mortamt1", "sex_1_freq", "educ_attain_1.0_freq", "gdpGrowth",  "totalvotes")
+
+hierarchicalModelData <- totalData %>%
+  filter(party_simplified == "REPUBLICAN") %>%
+  mutate(across(hierarchicalVariables, as.numeric)) %>%
+  select(hierarchicalVariables) %>%
+  group_by(year, state_id)
+
+formula <- bf(
+  vote_fraction ~ gdpGrowth + avrg_age + ftotinc + educ_attain_2.0_freq + race_1_freq +
+    (1 | state_id) + (1 | year)
+)
+
+prior <- c(
+  # Priors for fixed effects
+  prior(normal(0, 10), class = "b"),
+  prior(normal(0.5, 0.5), class = "Intercept"),
+  prior(normal(0, 1), class = "sigma", lb = 0),
+  prior(normal(0, 1), class = "sd")
+)
+
+model <- brm(
+  formula = formula,
+  prior = prior,
+  data = hierarchicalModelData,
+  family = gaussian(),
+  chains = 7,
+  iter = 10000,
+  warmup = 2000,
+  cores = 10,
+  control = list(adapt_delta = 0.90, max_treedepth = 14)  
+)
+summary(model)
+plot(model)
+pp_check(model)
+# _______________________________________ 
+# |                                     | 
+# |       Model Analysis                | 
+# |                                     | 
+# _______________________________________ 
+# _______________________________________ 
+# |                                     | 
+# |     Model 1 - Linear                | 
+# |                                     | 
+# _______________________________________ 
+loo_results <- loo(model)
+
+print(loo_results)
+
