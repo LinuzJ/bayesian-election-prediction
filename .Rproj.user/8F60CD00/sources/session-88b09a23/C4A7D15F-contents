@@ -21,6 +21,11 @@ if(!cmdstan_installed()){
   install_cmdstan()
 }
 
+# _______________________________________ 
+# |                                     | 
+# |       Data Transformation           | 
+# |                                     | 
+# _______________________________________ 
 
 # --------- Read and Parse Census Data --------- 
 countyData <- read.csv("data/county_census_and_election_result.csv")
@@ -46,4 +51,35 @@ censusDataStateLevel <- countyData %>%
 # --------- Read and Parse Voting Data --------- 
 votingData <- read.csv("data/1976-2020-president.csv")
 
-                       
+# Use only 2000 ->
+votingData <- votingData %>% 
+  filter(year >= 2000)
+
+votingData <- votingData[,c("year", "state_fips", "candidatevotes", "totalvotes", "party_simplified")]
+
+# Other parties -> unique group 
+otherParties <- votingData %>%
+  filter(party_simplified != "REPUBLICAN" & party_simplified != "DEMOCRAT") %>%
+  group_by(year, state_fips) %>%
+  summarize(candidatevotes = sum(candidatevotes, na.rm = TRUE), .groups = "drop")
+
+# Get yearly Total per State
+yearlyTotalVotes <- votingData %>%
+  group_by(year, state_fips) %>%
+  summarize(totalvotes = first(totalvotes), .groups = "drop")
+# Include above in otherParties
+otherParties <- otherParties %>%
+  left_join(
+    yearlyTotalVotes,
+    by = c("year", "state_fips")
+  ) %>%
+  mutate(party_simplified = "OTHER")
+
+# Append to total votingData
+votingData <- bind_rows(votingData, otherParties)
+
+# _______________________________________ 
+# |                                     | 
+# |       Model Building                | 
+# |                                     | 
+# _______________________________________ 

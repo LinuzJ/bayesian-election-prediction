@@ -3,7 +3,7 @@
     "path": "~/Uni/bayesian-data-analysis/project/main.R",
     "project_path": "main.R",
     "type": "r_source",
-    "hash": "0",
+    "hash": "1175866635",
     "contents": "",
     "dirty": false,
     "created": 1732705064836.0,
@@ -12,15 +12,16 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "30,28",
-        "scrollLine": "7"
+        "cursorPosition": "77,28",
+        "scrollLine": "28",
+        "marks": "<:50,35\n>:50,35"
     },
     "folds": "",
-    "lastKnownWriteTime": 1732706971,
+    "lastKnownWriteTime": 1732711414,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1732706971830,
+    "last_content_update": 1732711414080,
     "read_only": false,
     "read_only_alternatives": []
 }
