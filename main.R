@@ -82,9 +82,9 @@ linearFormula <- bf(vote_fraction ~ gdpGrowth + avrg_age + ftotinc + educ_attain
 
 # --------- Priors --------- 
 priors <- c(
-    prior(normal(0, 50), class = "b"),  # Weakly informative priors for coefficients
-    prior(normal(0.5, 0.3), class = "Intercept"),  # Weakly informative prior for the intercept
-    prior(cauchy(0, 0.1), class = "sigma")
+    prior(normal(0, 10), class = "b"),
+    prior(normal(0.5, 1), class = "Intercept"),
+    prior(cauchy(0, 5), class = "sigma")
   )
 
 state_model <- lm(
@@ -98,12 +98,12 @@ summary(state_model)
 mcmc_state_model <- brm(
   linearFormula,
   data = linearModelData,
-  family = gaussian(),  # Linear model assumes Gaussian errors
+  family = gaussian(),
   prior = priors,
-  chains = 5,  # Number of MCMC chains
-  iter = 6000,  # Number of iterations per chain
-  warmup = 2000,  # Burn-in period
-  cores = 10  # Number of cores for parallel computation
+  chains = 5,
+  iter = 8000,
+  warmup = 3000,
+  cores = 5
 )
 
 summary(mcmc_state_model)
