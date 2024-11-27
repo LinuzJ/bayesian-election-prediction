@@ -117,7 +117,7 @@ pp_check(mcmc_state_model)
 # |     Model 2 - Hierarchical          | 
 # |                                     | 
 # _______________________________________ 
-hierarchicalVariables <- c("state_id", "year", "vote_fraction", "gdpGrowth", "avrg_age", "ftotinc", "educ_attain_2.0_freq", "race_1_freq", "totalvotes")
+hierarchicalVariables <- c("state_id", "year", "vote_fraction", "gdpGrowth", "ftotinc", "educ_attain_2.0_freq", "race_1_freq", "totalvotes")
 #hierarchicalVariables <- c("state_id", "year", "vote_fraction", "inctot", "avrg_age", "mortamt1", "sex_1_freq", "educ_attain_1.0_freq", "gdpGrowth",  "totalvotes")
 
 hierarchicalModelData <- totalData %>%
@@ -126,29 +126,29 @@ hierarchicalModelData <- totalData %>%
   select(hierarchicalVariables) %>%
   group_by(year, state_id)
 
-formula <- bf(
-  vote_fraction ~ gdpGrowth + avrg_age + ftotinc + educ_attain_2.0_freq + race_1_freq +
+hierarchicalFormula <- bf(
+  vote_fraction ~ gdpGrowth + ftotinc + educ_attain_2.0_freq + race_1_freq +
     (1 | state_id) + (1 | year)
 )
 
 prior <- c(
   # Priors for fixed effects
-  prior(normal(0, 10), class = "b"),
+  prior(normal(0, 5), class = "b"),
   prior(normal(0.5, 0.5), class = "Intercept"),
-  prior(normal(0, 1), class = "sigma", lb = 0),
-  prior(normal(0, 1), class = "sd")
+  prior(normal(0, 0.5), class = "sigma", lb = 0),
+  prior(normal(0, 0.5), class = "sd")
 )
 
 model <- brm(
-  formula = formula,
+  formula = hierarchicalFormula,
   prior = prior,
   data = hierarchicalModelData,
   family = gaussian(),
   chains = 5,
-  iter = 10000,
+  iter = 6000,
   warmup = 2000,
-  cores = 5,
-  control = list(adapt_delta = 0.98, max_treedepth = 14)  
+  cores = 6,
+  control = list(max_treedepth = 15)  
 )
 summary(model)
 plot(model)
