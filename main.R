@@ -144,11 +144,11 @@ model <- brm(
   prior = prior,
   data = hierarchicalModelData,
   family = gaussian(),
-  chains = 7,
+  chains = 5,
   iter = 10000,
   warmup = 2000,
-  cores = 10,
-  control = list(adapt_delta = 0.90, max_treedepth = 14)  
+  cores = 5,
+  control = list(adapt_delta = 0.98, max_treedepth = 14)  
 )
 summary(model)
 plot(model)
