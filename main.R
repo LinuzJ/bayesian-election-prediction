@@ -78,6 +78,27 @@ otherParties <- otherParties %>%
 # Append to total votingData
 votingData <- bind_rows(votingData, otherParties)
 
+# Add %ofVotes, change name of state_id
+votingData <- votingData %>% 
+  mutate(
+    vote_fraction = candidatevotes / totalvotes
+  ) %>%
+  mutate(
+    state_id = state_fips
+  ) %>%
+  select(-state_fips)
+
+
+# --------- Combine Data --------- 
+votingData <- votingData %>%
+  mutate(state_id = as.integer(state_id))
+
+censusDataStateLevel <- censusDataStateLevel %>%
+  mutate(state_id = as.integer(state_id))
+
+# Perform the join
+totalData <- votingData %>%
+  left_join(censusDataStateLevel, by = c("year", "state_id"))
 
 # _______________________________________ 
 # |                                     | 
