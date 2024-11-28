@@ -12,7 +12,10 @@ if(!require(cmdstanr)){
   install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
   library(cmdstanr)
 }
-
+if (!require(bayesplot)) {
+  install.packages("bayesplot")
+  library(bayesplot)
+}
 cmdstan_installed <- function(){
   res <- try(out <- cmdstanr::cmdstan_path(), silent = TRUE)
   !inherits(res, "try-error")
@@ -119,7 +122,7 @@ priors <- c(
   )
 
 # --------- MCMC --------- 
-linear_beta_model <- brm(
+linearBetaModel <- brm(
   linearFormula,
   data = linearModelData,
   family = Beta(),
@@ -130,10 +133,8 @@ linear_beta_model <- brm(
   cores = 6
 )
 
-summary(linear_beta_model)
-plot(linear_beta_model)
+plot(linearBetaModel)
 
-pp_check(linear_beta_model)
 
 # _______________________________________ 
 # |                                     | 
@@ -160,7 +161,7 @@ summary(state_model)
 
 
 # --------- MCMC --------- 
-linear_gaussian_model <- brm(
+linearGaussianModel <- brm(
   linearFormula,
   data = linearModelData,
   family = gaussian(),
@@ -171,9 +172,7 @@ linear_gaussian_model <- brm(
   cores = 6
 )
 
-summary(linear_gaussian_model)
-plot(linear_gaussian_model)
-pp_check(linear_gaussian_model)
+plot(linearGaussianModel)
 
 
 # _______________________________________ 
@@ -189,7 +188,7 @@ hierarchicalFormula <- bf(
 )
 
 hierarchicalPrior <- c(
-  prior(normal(0, 10), class = "b"),
+  prior(normal(0, 5), class = "b"),
   prior(normal(0.5, 1), class = "Intercept"),
   prior(lognormal(1, 0.5), class = "phi"),
   prior(normal(0, 1), class = "sd")
@@ -201,15 +200,13 @@ hierarchicalModel <- brm(
   data = hierarchicalModelData,
   family = Beta(),
   chains = 8,
-  iter = 15000,
-  warmup = 5000,
+  iter = 8000,
+  warmup = 6000,
   cores = 6,
-  control = list(adapt_delta = 0.98, max_treedepth = 16)  
+  control = list(adapt_delta = 0.99, max_treedepth = 16)  
 )
 
-summary(hierarchicalModel)
 plot(hierarchicalModel)
-pp_check(hierarchicalModel)
 
 
 # _______________________________________ 
@@ -217,21 +214,30 @@ pp_check(hierarchicalModel)
 # |       Model Analysis                | 
 # |                                     | 
 # _______________________________________ 
+
+# _______________________________________
+# |                                     |
+# |       Convergence Diagnostics       |
+# |                                     |
+# _______________________________________
+
+summary(linearGaussianModel)
+summary(linearBetaModel)
+summary(hierarchicalModel)
+
+pp_check(linearBetaModel, nsamples = 100) 
 # _______________________________________ 
 # |                                     | 
 # |     Model 1 - Linear                | 
 # |                                     | 
 # _______________________________________ 
-loo_linear_beta_results <- loo(linear_beta_model, moment_match = TRUE)
-loo_linear_gaussian_results <- loo(linear_gaussian_model, moment_match = TRUE)
+loo_linear_beta_results <- loo(linearBetaModel, moment_match = TRUE)
+loo_linear_gaussian_results <- loo(linearGaussianModel, moment_match = TRUE)
 loo_hierarchical_results <- loo(hierarchicalModel)
 
 
 comparison <- loo_compare(loo_linear_beta_results, loo_linear_gaussian_results, loo_hierarchical_results)
 print(comparison)
-
-
-
 
 
 
