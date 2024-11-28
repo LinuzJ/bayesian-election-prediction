@@ -132,7 +132,6 @@ hierarchicalFormula <- bf(
 )
 
 prior <- c(
-  # Priors for fixed effects
   prior(normal(0, 5), class = "b"),
   prior(normal(0.5, 0.5), class = "Intercept"),
   prior(normal(0, 0.5), class = "sigma", lb = 0),
