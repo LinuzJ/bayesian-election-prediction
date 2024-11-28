@@ -62,7 +62,7 @@ totalData <- votingData %>%
 # |                                     | 
 # _______________________________________ 
 
-linearVariables <- c("state_id", "year", "vote_fraction", "gdpGrowth", "avrg_age", "ftotinc", "educ_attain_2.0_freq", "race_1_freq", "totalvotes")
+linearVariables <- c("state_id", "year", "vote_fraction", "gdpGrowth", "avrg_age", "ftotinc", "educ_attain_2.0_freq", "race_1_freq", "totalvotes", "sex_1_freq")
 
 linearModelData <- totalData %>%
   filter(party_simplified == "REPUBLICAN") %>%
@@ -109,7 +109,7 @@ hist(hierarchicalModelData$vote_fraction,
 # _______________________________________ 
 
 # --------- Formula --------- 
-linearFormula <- bf(vote_fraction ~ gdpGrowth + avrg_age + ftotinc + educ_attain_2.0_freq + race_1_freq)
+linearFormula <- bf(vote_fraction ~ gdpGrowth + avrg_age + ftotinc + educ_attain_2.0_freq + sex_1_freq + race_1_freq)
 
 # --------- Priors --------- 
 priors <- c(
@@ -142,7 +142,7 @@ pp_check(linear_beta_model)
 # _______________________________________ 
 
 # --------- Formula --------- 
-linearFormula <- bf(vote_fraction ~ gdpGrowth + avrg_age + ftotinc + educ_attain_2.0_freq + race_1_freq)
+linearFormula <- bf(vote_fraction ~ gdpGrowth + avrg_age + ftotinc + educ_attain_2.0_freq + sex_1_freq + race_1_freq)
 
 # --------- Priors --------- 
 priors <- c(
@@ -202,7 +202,7 @@ hierarchicalModel <- brm(
   family = Beta(),
   chains = 8,
   iter = 15000,
-  warmup = 6000,
+  warmup = 5000,
   cores = 6,
   control = list(adapt_delta = 0.98, max_treedepth = 16)  
 )
@@ -210,6 +210,8 @@ hierarchicalModel <- brm(
 summary(hierarchicalModel)
 plot(hierarchicalModel)
 pp_check(hierarchicalModel)
+
+
 # _______________________________________ 
 # |                                     | 
 # |       Model Analysis                | 
@@ -222,7 +224,7 @@ pp_check(hierarchicalModel)
 # _______________________________________ 
 loo_linear_beta_results <- loo(linear_beta_model, moment_match = TRUE)
 loo_linear_gaussian_results <- loo(linear_gaussian_model, moment_match = TRUE)
-loo_hierarchical_results <- loo(hierarchicalModel, moment_match = TRUE)
+loo_hierarchical_results <- loo(hierarchicalModel)
 
 
 comparison <- loo_compare(loo_linear_beta_results, loo_linear_gaussian_results, loo_hierarchical_results)
