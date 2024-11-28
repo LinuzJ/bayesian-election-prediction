@@ -49,14 +49,21 @@ processVotingData <- function(raw_data) {
   votingData <- bind_rows(votingData, otherParties)
   
   # Add %ofVotes, change name of state_id
-  votingData <- votingData %>% 
+  votingData <- votingData %>%
+    group_by(year, state_fips, party_simplified) %>%
+    summarize(
+      candidatevotes = sum(candidatevotes, na.rm = TRUE),
+      totalvotes = first(totalvotes),
+      .groups = "drop"
+    ) %>%
     mutate(
       vote_fraction = candidatevotes / totalvotes
     ) %>%
     mutate(
       state_id = state_fips
     ) %>%
-    select(-state_fips)
+    select(-state_fips) %>%
+    
   return (votingData)
 }
 

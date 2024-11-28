@@ -62,20 +62,51 @@ totalData <- votingData %>%
 # |                                     | 
 # _______________________________________ 
 
-# _______________________________________ 
-# |                                     | 
-# |     Model 1 - Linear                | 
-# |                                     | 
-# _______________________________________ 
-
-variables <- c("state_id", "year", "vote_fraction", "gdpGrowth", "avrg_age", "ftotinc", "educ_attain_2.0_freq", "race_1_freq", "totalvotes")
+linearVariables <- c("state_id", "year", "vote_fraction", "gdpGrowth", "avrg_age", "ftotinc", "educ_attain_2.0_freq", "race_1_freq", "totalvotes")
 
 linearModelData <- totalData %>%
   filter(party_simplified == "REPUBLICAN") %>%
-  mutate(across(variables, as.numeric)) %>%
-  select(variables) %>%
-  group_by(year, state_id)
+  mutate(across(linearVariables, as.numeric)) %>%
+  select(linearVariables) %>%
+  drop_na(gdpGrowth, avrg_age, ftotinc, educ_attain_2.0_freq, race_1_freq) %>%
+  mutate(
+    gdpGrowth = scale(gdpGrowth),
+    avrg_age = scale(avrg_age),
+    ftotinc = scale(ftotinc),
+    educ_attain_2.0_freq = scale(educ_attain_2.0_freq),
+    race_1_freq = scale(race_1_freq)
+  )
 
+hierarchicalVariables <- c("state_id", "year", "vote_fraction", "gdpGrowth", "avrg_age", "ftotinc", "educ_attain_2.0_freq", "race_1_freq", "totalvotes", "sex_1_freq")
+
+hierarchicalModelData <- totalData %>%
+  filter(party_simplified == "REPUBLICAN") %>%
+  mutate(across(hierarchicalVariables, as.numeric)) %>%
+  select(hierarchicalVariables) %>%
+  drop_na(gdpGrowth, avrg_age, ftotinc, educ_attain_2.0_freq, race_1_freq) %>%
+  mutate(
+    gdpGrowth = scale(gdpGrowth),
+    avrg_age = scale(avrg_age),
+    ftotinc = scale(ftotinc),
+    educ_attain_2.0_freq = scale(educ_attain_2.0_freq),
+    race_1_freq = scale(race_1_freq)
+  )
+
+hist(hierarchicalModelData$vote_fraction, 
+     main = "Histogram of vote_fraction", 
+     xlab = "% of Republican Votes", 
+     ylab = "Frequency", 
+     col = "red", 
+     border = "black",
+     breaks = 20,
+     xlim = c(0, 1)
+)
+
+# _______________________________________ 
+# |                                     | 
+# |     Model 1 - Linear Beta           | 
+# |                                     | 
+# _______________________________________ 
 
 # --------- Formula --------- 
 linearFormula <- bf(vote_fraction ~ gdpGrowth + avrg_age + ftotinc + educ_attain_2.0_freq + race_1_freq)
@@ -84,8 +115,41 @@ linearFormula <- bf(vote_fraction ~ gdpGrowth + avrg_age + ftotinc + educ_attain
 priors <- c(
     prior(normal(0, 10), class = "b"),
     prior(normal(0.5, 1), class = "Intercept"),
-    prior(cauchy(0, 5), class = "sigma")
+    prior(cauchy(0, 5), class = "phi") 
   )
+
+# --------- MCMC --------- 
+linear_beta_model <- brm(
+  linearFormula,
+  data = linearModelData,
+  family = Beta(),
+  prior = priors,
+  chains = 5,
+  iter = 10000,
+  warmup = 3000,
+  cores = 6
+)
+
+summary(linear_beta_model)
+plot(linear_beta_model)
+
+pp_check(linear_beta_model)
+
+# _______________________________________ 
+# |                                     | 
+# |     Model 1 - Linear Gaussian       | 
+# |                                     | 
+# _______________________________________ 
+
+# --------- Formula --------- 
+linearFormula <- bf(vote_fraction ~ gdpGrowth + avrg_age + ftotinc + educ_attain_2.0_freq + race_1_freq)
+
+# --------- Priors --------- 
+priors <- c(
+  prior(normal(0, 10), class = "b"),
+  prior(normal(0.5, 1), class = "Intercept"),
+  prior(cauchy(0, 5), class = "sigma")
+)
 
 state_model <- lm(
   linearFormula,
@@ -95,21 +159,21 @@ state_model <- lm(
 summary(state_model)
 
 
-mcmc_state_model <- brm(
+# --------- MCMC --------- 
+linear_gaussian_model <- brm(
   linearFormula,
   data = linearModelData,
   family = gaussian(),
   prior = priors,
   chains = 5,
-  iter = 15000,
+  iter = 10000,
   warmup = 3000,
-  cores = 5
+  cores = 6
 )
 
-summary(mcmc_state_model)
-plot(mcmc_state_model)
-
-pp_check(mcmc_state_model)
+summary(linear_gaussian_model)
+plot(linear_gaussian_model)
+pp_check(linear_gaussian_model)
 
 
 # _______________________________________ 
@@ -117,41 +181,35 @@ pp_check(mcmc_state_model)
 # |     Model 2 - Hierarchical          | 
 # |                                     | 
 # _______________________________________ 
-hierarchicalVariables <- c("state_id", "year", "vote_fraction", "gdpGrowth", "ftotinc", "educ_attain_2.0_freq", "race_1_freq", "totalvotes")
-#hierarchicalVariables <- c("state_id", "year", "vote_fraction", "inctot", "avrg_age", "mortamt1", "sex_1_freq", "educ_attain_1.0_freq", "gdpGrowth",  "totalvotes")
 
-hierarchicalModelData <- totalData %>%
-  filter(party_simplified == "REPUBLICAN") %>%
-  mutate(across(hierarchicalVariables, as.numeric)) %>%
-  select(hierarchicalVariables) %>%
-  group_by(year, state_id)
 
 hierarchicalFormula <- bf(
-  vote_fraction ~ gdpGrowth + ftotinc + educ_attain_2.0_freq + race_1_freq +
+  vote_fraction ~ gdpGrowth + avrg_age + ftotinc + educ_attain_2.0_freq + race_1_freq + sex_1_freq +
     (1 | state_id) + (1 | year)
 )
 
-prior <- c(
-  prior(normal(0, 5), class = "b"),
-  prior(normal(0.5, 0.5), class = "Intercept"),
-  prior(normal(0, 0.5), class = "sigma", lb = 0),
-  prior(normal(0, 0.5), class = "sd")
+hierarchicalPrior <- c(
+  prior(normal(0, 10), class = "b"),
+  prior(normal(0.5, 1), class = "Intercept"),
+  prior(lognormal(1, 0.5), class = "phi"),
+  prior(normal(0, 1), class = "sd")
 )
 
-model <- brm(
+hierarchicalModel <- brm(
   formula = hierarchicalFormula,
-  prior = prior,
+  prior = hierarchicalPrior,
   data = hierarchicalModelData,
-  family = gaussian(),
-  chains = 5,
-  iter = 6000,
-  warmup = 2000,
+  family = Beta(),
+  chains = 8,
+  iter = 15000,
+  warmup = 6000,
   cores = 6,
-  control = list(max_treedepth = 15)  
+  control = list(adapt_delta = 0.98, max_treedepth = 16)  
 )
-summary(model)
-plot(model)
-pp_check(model)
+
+summary(hierarchicalModel)
+plot(hierarchicalModel)
+pp_check(hierarchicalModel)
 # _______________________________________ 
 # |                                     | 
 # |       Model Analysis                | 
@@ -162,7 +220,16 @@ pp_check(model)
 # |     Model 1 - Linear                | 
 # |                                     | 
 # _______________________________________ 
-loo_results <- loo(model)
+loo_linear_beta_results <- loo(linear_beta_model, moment_match = TRUE)
+loo_linear_gaussian_results <- loo(linear_gaussian_model, moment_match = TRUE)
+loo_hierarchical_results <- loo(hierarchicalModel, moment_match = TRUE)
 
-print(loo_results)
+
+comparison <- loo_compare(loo_linear_beta_results, loo_linear_gaussian_results, loo_hierarchical_results)
+print(comparison)
+
+
+
+
+
 
