@@ -202,7 +202,7 @@ hierarchicalModel <- brm(
   data = hierarchicalModelData,
   family = Beta(),
   chains = 8,
-  iter = 8000,
+  iter = 16000,
   warmup = 6000,
   cores = 6,
   control = list(adapt_delta = 0.99, max_treedepth = 16)  
