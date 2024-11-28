@@ -77,6 +77,7 @@ linearModelData <- totalData %>%
     avrg_age = scale(avrg_age),
     ftotinc = scale(ftotinc),
     educ_attain_2.0_freq = scale(educ_attain_2.0_freq),
+    sex_1_freq = scale(sex_1_freq),
     race_1_freq = scale(race_1_freq)
   )
 
@@ -92,6 +93,7 @@ hierarchicalModelData <- totalData %>%
     avrg_age = scale(avrg_age),
     ftotinc = scale(ftotinc),
     educ_attain_2.0_freq = scale(educ_attain_2.0_freq),
+    sex_1_freq = scale(sex_1_freq),
     race_1_freq = scale(race_1_freq)
   )
 
@@ -127,9 +129,9 @@ linearBetaModel <- brm(
   data = linearModelData,
   family = Beta(),
   prior = priors,
-  chains = 5,
-  iter = 10000,
-  warmup = 3000,
+  chains = 4,
+  iter = 4000,
+  warmup = 1000,
   cores = 6
 )
 
@@ -225,12 +227,24 @@ summary(linearGaussianModel)
 summary(linearBetaModel)
 summary(hierarchicalModel)
 
-pp_check(linearBetaModel, nsamples = 100) 
+
+
 # _______________________________________ 
 # |                                     | 
-# |     Model 1 - Linear                | 
+# |   Posterior Predictive Checks       | 
 # |                                     | 
 # _______________________________________ 
+
+
+pp_check(linearBetaModel, nsamples = 100)
+
+
+# _______________________________________ 
+# |                                     | 
+# |         Model Comparison            | 
+# |                                     | 
+# _______________________________________ 
+
 loo_linear_beta_results <- loo(linearBetaModel, moment_match = TRUE)
 loo_linear_gaussian_results <- loo(linearGaussianModel, moment_match = TRUE)
 loo_hierarchical_results <- loo(hierarchicalModel)
