@@ -202,8 +202,8 @@ hierarchicalModel <- brm(
   data = hierarchicalModelData,
   family = Beta(),
   chains = 8,
-  iter = 16000,
-  warmup = 6000,
+  iter = 10000,
+  warmup = 5000,
   cores = 6,
   control = list(adapt_delta = 0.99, max_treedepth = 16)  
 )
@@ -236,7 +236,9 @@ summary(hierarchicalModel)
 # _______________________________________ 
 
 
-pp_check(linearBetaModel, nsamples = 100)
+pp_check(linearGaussianModel)
+pp_check(linearBetaModel)
+pp_check(hierarchicalModel)
 
 
 # _______________________________________ 
