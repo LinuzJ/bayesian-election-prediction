@@ -25,6 +25,7 @@ if(!cmdstan_installed()){
 }
 
 source("data_processing.R")
+source("scaling.R")
 
 # _______________________________________ 
 # |                                     | 
@@ -96,6 +97,8 @@ hierarchicalModelData <- totalData %>%
     sex_1_freq = scale(sex_1_freq),
     race_1_freq = scale(race_1_freq)
   )
+
+hierarchicalScalingParams <- getScalingParams(hierarchicalModelData)
 
 hist(hierarchicalModelData$vote_fraction, 
      main = "Histogram of vote_fraction", 
@@ -247,13 +250,18 @@ pp_check(hierarchicalModel)
 # |                                     | 
 # _______________________________________ 
 
-loo_linear_beta_results <- loo(linearBetaModel, moment_match = TRUE)
-loo_linear_gaussian_results <- loo(linearGaussianModel, moment_match = TRUE)
+loo_linear_beta_results <- loo(linearBetaModel)
+loo_linear_gaussian_results <- loo(linearGaussianModel)
 loo_hierarchical_results <- loo(hierarchicalModel)
 
 
-comparison <- loo_compare(loo_linear_beta_results, loo_linear_gaussian_results, loo_hierarchical_results)
+comparison <- loo_compare(loo_linear_beta_results, loo_hierarchical_results, loo_linear_gaussian_results)
 print(comparison)
 
 
+# _______________________________________ 
+# |                                     | 
+# |         Predictive Accuracy         | 
+# |                                     | 
+# _______________________________________ 
 
