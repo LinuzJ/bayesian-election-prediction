@@ -261,7 +261,48 @@ print(comparison)
 
 # _______________________________________ 
 # |                                     | 
-# |         Predictive Accuracy         | 
+# |         Sensitivity Analysis        | 
 # |                                     | 
 # _______________________________________ 
+alternative_priors_linear_beta <- c(
+  prior(normal(0, 50), class = "b"),
+  prior(normal(0.5, 2), class = "Intercept"),
+  prior(lognormal(1, 0.5), class = "phi")
+)
 
+linearBetaModel_sensitivity <- brm(
+  linearFormula,
+  data = linearModelData,
+  family = Beta(),
+  prior = alternative_priors_linear_beta,
+  chains = 4,
+  iter = 4000,
+  warmup = 1000,
+  cores = 6
+)
+
+alternative_priors_hierarchical <- c(
+  prior(normal(0, 10), class = "b"),
+  prior(normal(0.5, 2), class = "Intercept"),
+  prior(cauchy(0, 5), class = "phi"), 
+  prior(normal(0, 2), class = "sd")
+)
+
+hierarchicalModel_sensitivity <- brm(
+  formula = hierarchicalFormula,
+  prior = alternative_priors_hierarchical,
+  data = hierarchicalModelData,
+  family = Beta(),
+  chains = 8,
+  iter = 10000,
+  warmup = 5000,
+  cores = 6,
+  control = list(adapt_delta = 0.99, max_treedepth = 16)
+)
+
+# Compare Results
+summary(linearBetaModel_sensitivity)
+summary(hierarchicalModel_sensitivity)
+
+pp_check(linearBetaModel_sensitivity)
+pp_check(hierarchicalModel_sensitivity)
