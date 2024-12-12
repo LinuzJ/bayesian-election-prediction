@@ -72,7 +72,36 @@ linearModelData <- totalData %>%
   filter(party_simplified == "REPUBLICAN") %>%
   mutate(across(linearVariables, as.numeric)) %>%
   select(linearVariables) %>%
-  drop_na(gdpGrowth, avrg_age, ftotinc, educ_attain_2.0_freq, race_1_freq) %>%
+  drop_na(gdpGrowth, avrg_age, ftotinc, educ_attain_2.0_freq, race_1_freq)
+
+hist(linearModelData$ftotinc, 
+     main = "Histogram of Avg Household Distribution", 
+     xlab = "Average Household Income", 
+     ylab = "Frequency", 
+     col = "red", 
+     border = "black",
+     breaks = 20
+)
+
+hist(linearModelData$gdpGrowth, 
+     main = "Histogram of rolling GDP Growth", 
+     xlab = "2-Year GDP Growth", 
+     ylab = "Frequency", 
+     col = "red", 
+     border = "black",
+     breaks = 50
+)
+
+hist(linearModelData$race_1_freq, 
+     main = "Histogram of Ethnicity", 
+     xlab = "Fraction of population Caucasian", 
+     ylab = "Frequency", 
+     col = "red", 
+     border = "black",
+     breaks = 40
+)
+
+linearModelData <- linearModelData %>%
   mutate(
     gdpGrowth = scale(gdpGrowth),
     avrg_age = scale(avrg_age),
@@ -100,6 +129,7 @@ hierarchicalModelData <- totalData %>%
 
 hierarchicalScalingParams <- getScalingParams(hierarchicalModelData)
 
+# --------- Visualization of Data --------- 
 hist(hierarchicalModelData$vote_fraction, 
      main = "Histogram of vote_fraction", 
      xlab = "% of Republican Votes", 
@@ -109,6 +139,7 @@ hist(hierarchicalModelData$vote_fraction,
      breaks = 20,
      xlim = c(0, 1)
 )
+
 
 # _______________________________________ 
 # |                                     | 
